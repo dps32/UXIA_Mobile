@@ -35,6 +35,8 @@ import org.xmlpull.v1.XmlPullParser
 
 class NotificationsFragment : Fragment() {
 
+    lateinit var lv : ListView
+
     private val viewModel: DeviceViewModel by activityViewModels()
     val dataset = mutableListOf<BluetoothDevice>()
     lateinit var adapter : ArrayAdapter<BluetoothDevice>
@@ -80,7 +82,7 @@ class NotificationsFragment : Fragment() {
 
         return root
     }
-
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         adapter = getListAdapter()
@@ -92,27 +94,32 @@ class NotificationsFragment : Fragment() {
             Toast.makeText(requireContext(),"Recargado", Toast.LENGTH_SHORT).show()
         }
 
-        val lv = binding.listView
+        lv = binding.listView
         lv.setAdapter(adapter)
 
         lv.setOnItemClickListener { _, _, position, _ ->
 
-            val selectedDevice = binding.listView.adapter.getItem(position) as Device
+            val selectedDevice = dataset[position]
 
-            val nom = selectedDevice.nom
-            val address = selectedDevice.address
+            selectedDevice?.let {
+                val nom = it.name
+                val address = it.address
 //           status = selectedDevice.status
 
             device = Device(nom,address,"")
 
-            actualizarDevice(device)
-            guardarData()
+                actualizarDevice(device)
+                guardarData()
 
-            Toast.makeText(
-                requireContext(),
-                "Seleccionado: $nom",
-                Toast.LENGTH_SHORT
-            ).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Seleccionado: $nom",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+            }
+
+
         }
     }
     fun actualizarDevice(device: Device){

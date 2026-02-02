@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.navArgs
+import com.uxia1.uxia_mobile.BLEconnDialog
 import com.uxia1.uxia_mobile.DeviceViewModel
 import com.uxia1.uxia_mobile.databinding.FragmentHomeBinding
 import org.xmlpull.v1.XmlPullParser
@@ -56,13 +57,12 @@ class HomeFragment : Fragment() {
 
         cagarXML()
 
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
+//        homeViewModel.text.observe(viewLifecycleOwner) {
+//            txtInfo.text = it
+//        }
     }
     fun cagarXML(){
-        val filename = "device.xml"
+        val filename = "setting.xml"
         try {
             requireContext().openFileInput(filename).use { inputStream ->
                 val parser: XmlPullParser = Xml.newPullParser()
