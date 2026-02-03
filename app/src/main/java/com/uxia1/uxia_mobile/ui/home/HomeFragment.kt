@@ -1,24 +1,33 @@
 package com.uxia1.uxia_mobile.ui.home
 
+import android.bluetooth.BluetoothAdapter
 import android.os.Bundle
 import android.util.Xml
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.navArgs
-import com.uxia1.uxia_mobile.BLEconnDialog
-import com.uxia1.uxia_mobile.DeviceViewModel
+import com.uxia1.uxia_mobile.Device
+import com.uxia1.uxia_mobile.ShareViewModel
+import com.uxia1.uxia_mobile.MainActivity
 import com.uxia1.uxia_mobile.databinding.FragmentHomeBinding
 import org.xmlpull.v1.XmlPullParser
+import java.io.File
 
 class HomeFragment : Fragment() {
     lateinit var homeViewModel : HomeViewModel
     lateinit var txtInfo : TextView
-    private val viewModel: DeviceViewModel by activityViewModels()
+
+    lateinit var fotoView : ImageView
+
+    lateinit var btnShowDialog : Button
+    private val viewModel: ShareViewModel by activityViewModels()
     var device : Device? = null
 
     private var _binding: FragmentHomeBinding? = null
@@ -32,9 +41,13 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        viewModel.device.observe(viewLifecycleOwner){ newDevice ->
+            device=newDevice
+            actualizarDevice(newDevice)
+        }
 
-        viewModel.device.observe(viewLifecycleOwner){ device ->
-            actualizarDevice(device)
+        viewModel.imgFile.observe(viewLifecycleOwner){ file ->
+            cambiarImagen(file)
         }
 
         homeViewModel =
@@ -52,10 +65,19 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
+        btnShowDialog = binding.btnShowDialog
         txtInfo = binding.txtInfo
-
+        fotoView = binding.fotoView
         cagarXML()
+        if(device==null){
+            btnShowDialog.isEnabled=false
+        }
+
+        btnShowDialog.setOnClickListener {
+            val btAdapter = BluetoothAdapter.getDefaultAdapter()
+            val btdevice = btAdapter.getRemoteDevice(device!!.address)
+            (requireContext() as MainActivity).showBLEDialog(btdevice)
+        }
 
 //        homeViewModel.text.observe(viewLifecycleOwner) {
 //            txtInfo.text = it
@@ -96,7 +118,14 @@ class HomeFragment : Fragment() {
     }
 
     fun actualizarDevice(device: Device){
-        txtInfo.text = "${device.nom} ${device.address}"
+
+        txtInfo.text = "${device.nom}\n${device.address}"
+        btnShowDialog.isEnabled=true
+    }
+
+    fun cambiarImagen(imgFile : File){
+        fotoView.setImageDrawable(null)
+        fotoView.setImageURI(imgFile.toUri())
     }
 
     override fun onDestroyView() {
@@ -107,8 +136,3 @@ class HomeFragment : Fragment() {
 
 }
 
-data class Device(
-    val nom: String,
-    val address : String,
-    val status : String
-)

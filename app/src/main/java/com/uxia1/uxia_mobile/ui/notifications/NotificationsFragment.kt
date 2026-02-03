@@ -9,7 +9,6 @@ import android.content.Context
 
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Xml
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,25 +18,21 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.findNavController
-import com.uxia1.uxia_mobile.DeviceViewModel
+import com.uxia1.uxia_mobile.Device
+import com.uxia1.uxia_mobile.ShareViewModel
 import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.databinding.FragmentNotificationsBinding
-import com.uxia1.uxia_mobile.ui.home.Device
-import com.uxia1.uxia_mobile.ui.home.HomeFragment
-import org.xmlpull.v1.XmlPullParser
 
 
 class NotificationsFragment : Fragment() {
 
     lateinit var lv : ListView
 
-    private val viewModel: DeviceViewModel by activityViewModels()
+    private val viewModel: ShareViewModel by activityViewModels()
     val dataset = mutableListOf<BluetoothDevice>()
     lateinit var adapter : ArrayAdapter<BluetoothDevice>
 
@@ -101,14 +96,13 @@ class NotificationsFragment : Fragment() {
 
             val selectedDevice = dataset[position]
 
-            selectedDevice?.let {
+            selectedDevice.let {
                 val nom = it.name
                 val address = it.address
 //           status = selectedDevice.status
 
-            device = Device(nom,address,"")
+                device = Device(nom,address,"")
 
-                actualizarDevice(device)
                 guardarData()
 
                 Toast.makeText(
@@ -116,9 +110,7 @@ class NotificationsFragment : Fragment() {
                     "Seleccionado: $nom",
                     Toast.LENGTH_SHORT
                 ).show()
-
             }
-
 
         }
     }
@@ -190,8 +182,8 @@ class NotificationsFragment : Fragment() {
         val xml = """
             
         <device>
-            <name>${device?.nom}</name>
-            <address>${device?.address}</address>
+            <name>${device.nom}</name>
+            <address>${device.address}</address>
         </device>
         """.trimIndent()
 
