@@ -2,6 +2,7 @@ package com.uxia1.uxia_mobile.ui.home
 
 import android.bluetooth.BluetoothAdapter
 import android.os.Bundle
+import android.util.Log
 import android.util.Xml
 import android.view.LayoutInflater
 import android.view.View
@@ -62,6 +63,7 @@ class HomeFragment : Fragment() {
         return root
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -69,6 +71,7 @@ class HomeFragment : Fragment() {
         txtInfo = binding.txtInfo
         fotoView = binding.fotoView
         cagarXML()
+
         if(device==null){
             btnShowDialog.isEnabled=false
         }
@@ -76,6 +79,8 @@ class HomeFragment : Fragment() {
         btnShowDialog.setOnClickListener {
             val btAdapter = BluetoothAdapter.getDefaultAdapter()
             val btdevice = btAdapter.getRemoteDevice(device!!.address)
+            Log.d("Test","usado ")
+
             (requireContext() as MainActivity).showBLEDialog(btdevice)
         }
 

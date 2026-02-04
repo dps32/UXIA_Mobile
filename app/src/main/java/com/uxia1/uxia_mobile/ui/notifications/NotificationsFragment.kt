@@ -114,6 +114,13 @@ class NotificationsFragment : Fragment() {
 
         }
     }
+    override fun onResume() {
+        super.onResume()
+
+        updatePairedDevices()
+        adapter.notifyDataSetChanged()
+
+    }
     fun actualizarDevice(device: Device){
         viewModel.updateDevice(device)
     }
@@ -180,7 +187,7 @@ class NotificationsFragment : Fragment() {
     fun generarXML(){
 
         val xml = """
-            
+        
         <device>
             <name>${device.nom}</name>
             <address>${device.address}</address>

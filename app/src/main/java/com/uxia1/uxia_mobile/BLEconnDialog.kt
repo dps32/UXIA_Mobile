@@ -110,6 +110,8 @@ class BLEconnDialog(
             }
             if (!isConnecting) {
                 connectToDevice()
+//                disconnect()
+//                dismiss()
             }
         }
 
@@ -351,6 +353,7 @@ class BLEconnDialog(
                     0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()
                 ))) {
                 if (isReceiving && receivedData.size() > 0) {
+                    Log.d("P_354","complete Photo")
                     completePhotoTransfer()
                 } else {
                     tvStatus.text = "Finalització rebuda sense dades"
@@ -408,6 +411,8 @@ class BLEconnDialog(
 
                 // Si hem arribat a la mida esperada, completar
                 if (totalSize > 0 && currentSize >= totalSize) {
+                    Log.d("P_412","complete Photo")
+
                     completePhotoTransfer()
                 }
             }
@@ -450,6 +455,7 @@ class BLEconnDialog(
                 // Notificació
                 //Toast.makeText(this, "Foto rebuda: $finalSize bytes",
                 //    Toast.LENGTH_LONG).show()
+
                 Log.v("BT","Foto rebuda: $finalSize bytes")
             } catch (e : Exception) {
                 Log.v("ERROR","Error en descodificació base64")
