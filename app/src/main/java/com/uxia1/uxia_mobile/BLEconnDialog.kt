@@ -149,10 +149,10 @@ class BLEconnDialog(
                         Log.e("HTTP Error", "Error al enviar: ${e.message}")
                         tvStatus.text = "Error en l'enviament"
                         btnConnect.isEnabled = true
-                        dismiss()
                     }
                 }
                 disconnect()
+                dismiss()
             }
             else if (!isConnecting) {
                 connectToDevice()
