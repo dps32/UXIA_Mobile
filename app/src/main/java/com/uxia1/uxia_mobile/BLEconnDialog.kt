@@ -108,7 +108,7 @@ class BLEconnDialog(
                 disconnect()
                 dismiss()
             }
-            if (!isConnecting) {
+            else if (!isConnecting) {
                 connectToDevice()
 //                disconnect()
 //                dismiss()
