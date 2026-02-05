@@ -11,19 +11,28 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.util.Base64
+import android.util.Base64OutputStream
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
+import com.uxia1.uxia_mobile.services.HttpClientService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -62,7 +71,6 @@ class BLEconnDialog(
     private val SCAN_PERIOD: Long = 10000
     private val RECEIVE_TIMEOUT: Long = 30000  // 30 segons timeout
 
-
     // Variables per foto
     private val receivedData = ByteArrayOutputStream()
     lateinit private var receivedFile : File
@@ -72,6 +80,8 @@ class BLEconnDialog(
     private var lastPacketTime = 0L
     private var packetCount = 0
 
+    private lateinit var decodedData : ByteArray
+
     // Callback de timeout
     @SuppressLint("MissingPermission")
     private val connectionTimeoutRunnable = Runnable {
@@ -79,6 +89,18 @@ class BLEconnDialog(
             disconnect()
             connectionCallback.onConnectionFailed("Timeout de connexió")
             dismiss()
+        }
+    }
+
+    // Convertir File en una string de Base64
+    fun convertImageFileToBase64(imageFile: File): String {
+        return ByteArrayOutputStream().use { outputStream ->
+            Base64OutputStream(outputStream, Base64.DEFAULT).use { base64FilterStream ->
+                imageFile.inputStream().use { inputStream ->
+                    inputStream.copyTo(base64FilterStream)
+                }
+            }
+            return@use outputStream.toString()
         }
     }
 
@@ -104,9 +126,33 @@ class BLEconnDialog(
         // Configurar botons
         btnConnect.setOnClickListener {
             if( received ) {
+                savePhoto(decodedData)
                 connectionCallback.onReceivedImage(receivedFile)
+
+                tvStatus.text = "Enviant imatge a UXIA..."
+                btnConnect.isEnabled = false
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        // Ejecutamos la parte pesada en Dispatchers.IO
+                        val response = withContext(Dispatchers.IO) {
+                            val base64Image = convertImageFileToBase64(receivedFile)
+                            HttpClientService.sendImage(base64Image)
+                        }
+
+                        Log.d("HTTP Service", response)
+
+                        connectionCallback.onReceivedImage(receivedFile)
+                        dismiss()
+
+                    } catch (e: Exception) {
+                        Log.e("HTTP Error", "Error al enviar: ${e.message}")
+                        tvStatus.text = "Error en l'enviament"
+                        btnConnect.isEnabled = true
+                        dismiss()
+                    }
+                }
                 disconnect()
-                dismiss()
             }
             else if (!isConnecting) {
                 connectToDevice()
@@ -450,8 +496,12 @@ class BLEconnDialog(
             Log.v("FOTO",dataStr)
             // Guardar foto
             try {
-                val decodedData = Base64.decode(dataStr, Base64.DEFAULT)
-                savePhoto(decodedData)
+                decodedData = Base64.decode(dataStr, Base64.DEFAULT)
+                received = true
+                val bitmap = BitmapFactory.decodeByteArray(decodedData, 0, decodedData.size)
+                tvImage.setImageBitmap(bitmap)
+                updateUIForReceived()
+                //savePhoto(decodedData)
                 // Notificació
                 //Toast.makeText(this, "Foto rebuda: $finalSize bytes",
                 //    Toast.LENGTH_LONG).show()
@@ -497,17 +547,13 @@ class BLEconnDialog(
 
             Log.d("Photo", "Foto guardada: ${receivedFile.absolutePath}")
 
-            // preview image a l'app
-            tvImage.setImageURI(receivedFile.toUri())
-
             // Notificar galeria
             val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
             mediaScanIntent.data = Uri.fromFile(receivedFile)
             context.sendBroadcast(mediaScanIntent)
 
             tvStatus.text = "💾 Guardat: $filename"
-            received = true
-            updateUIForReceived()
+
             //dismiss()
 
         } catch (e: Exception) {
