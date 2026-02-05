@@ -478,12 +478,12 @@ class BLEconnDialog(
     private fun savePhoto(imageData: ByteArray) {
         try {
             val timestamp = System.currentTimeMillis()
-            val filename = "ESP32_${timestamp}.jpg"
+            val filename = "UXIA_Image_${timestamp}.jpg"
 
             // Guardar al directori de Pictures
             val picturesDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES)
-            val fri3dDir = File(picturesDir, "ESP32_Camera")
+            val fri3dDir = File(picturesDir, "UXIA")
 
             if (!fri3dDir.exists()) {
                 fri3dDir.mkdirs()
