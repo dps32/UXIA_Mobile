@@ -137,7 +137,7 @@ class NotificationsFragment : Fragment() {
                 }
                 // "Pintem" valors (quan es refresca)
                 convertView.findViewById<TextView>(R.id.nom).text = getItem(pos)?.name
-                convertView.findViewById<TextView>(R.id.address).text = getItem(pos)?.address
+                convertView.findViewById<TextView>(R.id.txtHistory).text = getItem(pos)?.address
                 convertView.findViewById<TextView>(R.id.status).text = getItem(pos)?.type.toString()
                 return convertView
             }

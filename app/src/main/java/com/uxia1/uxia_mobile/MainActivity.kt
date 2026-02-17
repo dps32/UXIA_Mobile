@@ -17,6 +17,7 @@ import java.io.File
 import androidx.fragment.app.activityViewModels
 
 import com.uxia1.uxia_mobile.ShareViewModel
+import org.json.JSONObject
 import kotlin.getValue
 
 
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
     lateinit var bleDialog: BLEconnDialog
 
     private lateinit var binding: ActivityMainBinding
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +45,9 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
                 R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications
             )
         )
+
+        TTS.setTtsContext(applicationContext)
+
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
@@ -60,6 +65,11 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
             }
             show()
         }
+    }
+
+    fun registerHistory(response:String){
+        val jsonObject = JSONObject(response)
+
     }
 
     // DIALOG CALLBACKS
@@ -89,6 +99,23 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
             viewModel.updateFile(file)
             val filename = file.name
             Toast.makeText(this, "Imatge rebuda: $filename", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onReceivedResponse(img: String, response : String) {
+        runOnUiThread {
+            val jsonObject = JSONObject(response)
+            if (jsonObject.getString("status") == "OK") {
+                val data = jsonObject.getJSONObject("data")
+                val descriptor = data.getString("description")
+                val tagArray = data.getJSONArray("tags")
+
+                val list = mutableListOf<String>()
+                for (i in 0 until tagArray.length()) {
+                    list.add(tagArray.getString(i))
+                }
+                viewModel.updateResponse(History(img, list, descriptor))
+            }
         }
     }
 

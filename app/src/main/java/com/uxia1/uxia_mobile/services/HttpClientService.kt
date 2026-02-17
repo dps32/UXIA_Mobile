@@ -17,17 +17,28 @@ class HttpClientService {
                 val connection = url.openConnection() as HttpURLConnection
 
                 connection.requestMethod = "POST"
+                connection.setRequestProperty("Authorization", "Bearer edc0dc61a269cfa2339c8a200c848e3659f13e2feefdf6128fbc8769ed8b4659")
+
                 connection.setRequestProperty("Content-Type", "application/json")
                 connection.setRequestProperty("Accept", "application/json")
                 connection.doOutput = true
                 connection.doInput = true
 
                 val jsonBody = "{" +
-                        "\"images\": [\"$base64Image\"]," +
+
                         "\"stream\": false," +
-                        "prompt: \"\"" +
+                        "\"prompt\": \"Descriu aquesta imatge\"," +
+                        "\"model\" : \"qwen2.5vl:7b\"," +
+                        "\"images\": [\"$base64Image\"] " +
+                        "}"
+                val jsonBodyTest = "{" +
+                        "\"images\": [\"$base64Image\"]," +
+                        "\"stream\": \"false\"," +
+                        "\"prompt\": \"Descriu aquesta imatge\"," +
+                        "\"model\" : \"qwen2.5vl:7b\"" +
                         "}"
 
+            Log.d("HTTPTest",jsonBodyTest)
                 /*val jsonBody = "{" +
                         "\"email\": [\"juan@example.com\"]," +
                         "\"password\": 123" +

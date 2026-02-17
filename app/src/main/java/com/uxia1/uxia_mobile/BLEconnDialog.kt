@@ -39,6 +39,7 @@ import java.io.FileOutputStream
 import java.util.UUID
 
 class BLEconnDialog(
+
     context: Context,
     private val device: BluetoothDevice,
     private val connectionCallback: BLEConnectionCallback
@@ -48,10 +49,13 @@ class BLEconnDialog(
         fun onConnectionSuccess(gatt: BluetoothGatt)
         fun onConnectionFailed(error: String)
         fun onConnectionCancelled()
+        fun onReceivedResponse(img : String, response : String)
+
         fun onReceivedImage(file: File)
     }
 
     // Views
+
     private lateinit var tvDeviceName: TextView
     private lateinit var tvDeviceAddress: TextView
     private lateinit var tvStatus: TextView
@@ -95,7 +99,7 @@ class BLEconnDialog(
     // Convertir File en una string de Base64
     fun convertImageFileToBase64(imageFile: File): String {
         return ByteArrayOutputStream().use { outputStream ->
-            Base64OutputStream(outputStream, Base64.DEFAULT).use { base64FilterStream ->
+            Base64OutputStream(outputStream, Base64.NO_WRAP).use { base64FilterStream ->
                 imageFile.inputStream().use { inputStream ->
                     inputStream.copyTo(base64FilterStream)
                 }
@@ -134,15 +138,20 @@ class BLEconnDialog(
 
                 CoroutineScope(Dispatchers.Main).launch {
                     try {
+                        var base64Image =""
                         // Ejecutamos la parte pesada en Dispatchers.IO
                         val response = withContext(Dispatchers.IO) {
-                            val base64Image = convertImageFileToBase64(receivedFile)
+                            base64Image = convertImageFileToBase64(receivedFile)
                             HttpClientService.sendImage(base64Image)
                         }
 
                         Log.d("HTTP Service", response)
 
+                        TTS.speakResponse(response)
+
                         connectionCallback.onReceivedImage(receivedFile)
+                        connectionCallback.onReceivedResponse(base64Image,response)
+
                         dismiss()
 
                     } catch (e: Exception) {
