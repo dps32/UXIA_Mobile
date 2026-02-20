@@ -1,6 +1,4 @@
-package com.uxia1.uxia_mobile
-
-
+package com.uxia1.uxia_mobile.data.model
 
 data class History(
     val base4Image: String,

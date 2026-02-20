@@ -1,4 +1,4 @@
-package com.uxia1.uxia_mobile.ui.notifications
+package com.uxia1.uxia_mobile.ui.main.notifications
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -9,6 +9,7 @@ import android.content.Context
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,8 +23,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
-import com.uxia1.uxia_mobile.Device
-import com.uxia1.uxia_mobile.ShareViewModel
+import com.uxia1.uxia_mobile.data.model.Device
+import com.uxia1.uxia_mobile.ui.common.ShareViewModel
 import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.databinding.FragmentNotificationsBinding
 
@@ -86,6 +87,7 @@ class NotificationsFragment : Fragment() {
         recargar.setOnClickListener {
             updatePairedDevices()
             adapter.notifyDataSetChanged()
+            eliminarXML()
             Toast.makeText(requireContext(),"Recargado", Toast.LENGTH_SHORT).show()
         }
 
@@ -196,6 +198,18 @@ class NotificationsFragment : Fragment() {
 
         requireContext().openFileOutput("setting.xml", Context.MODE_PRIVATE).use {
             it.write(xml.toByteArray())
+        }
+    }
+
+    fun eliminarXML() {
+
+        val filename = "setting.xml"
+        val isDeleted = requireContext().deleteFile(filename)
+
+        if (isDeleted) {
+            Log.d("FILE_IO", "El archivo $filename fue eliminado con éxito.")
+        } else {
+            Log.d("FILE_IO", "No se pudo eliminar el archivo o no existe.")
         }
     }
 

@@ -1,0 +1,98 @@
+package com.uxia1.uxia_mobile.ui.auth
+
+import android.content.Intent
+import android.graphics.Color
+import android.net.wifi.rtt.PasnConfig
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.uxia1.uxia_mobile.R
+import com.uxia1.uxia_mobile.data.model.User
+import com.uxia1.uxia_mobile.services.HttpClientService
+import com.uxia1.uxia_mobile.ui.main.MainActivity
+import org.json.JSONObject
+
+class LoginActivity : AppCompatActivity() {
+    lateinit var txtEmail : EditText
+    lateinit var txtPass : EditText
+    lateinit var txtInfo : TextView
+    lateinit var txtRegister : TextView
+    lateinit var btnLogin : Button
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_login)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        txtRegister = findViewById(R.id.tvRegister)
+
+        txtEmail = findViewById(R.id.txtLoginEmail)
+        txtPass = findViewById(R.id.txtPassword)
+
+        txtInfo = findViewById(R.id.txtLoginInfo)
+
+        btnLogin = findViewById(R.id.btnLogin)
+
+        btnLogin.setOnClickListener{
+            if(checkCampos()){
+                UItextWarning()
+                return@setOnClickListener
+            }
+
+            val email = txtEmail.text.toString()
+            val pass = txtPass.text.toString()
+            val user = User(email,pass)
+
+//            val response = HttpClientService.Companion.login(user)
+//            handleResponse(response)
+            val response = "OK"
+            if(response == "OK"){
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+
+        }
+
+        txtRegister.setOnClickListener {
+             val intent = Intent(this, RegisterActivity::class.java)
+             startActivity(intent)
+        }
+
+
+    }
+    private fun handleResponse(response : String) {
+//        {"status": "OK", "message": "Usuari autenticat correctament", "data": {"token": "D23qswfSgR6VM9cuTuN"}}
+        val jsonObject = JSONObject(response)
+        if (jsonObject.getString("status") == "OK") {
+            val data = jsonObject.getJSONObject("data")
+            val token = data.getString("token")
+        }else{
+            txtInfo.setTextColor(Color.RED)
+            txtInfo.text = "Datos incorrectos o usuario no existe"
+        }
+    }
+
+    private fun UItextWarning() {
+        if (txtEmail.text.isEmpty() || txtEmail.text.isBlank()) txtEmail.setBackgroundResource(R.drawable.bg_edittext_error)
+        if (txtPass.text.isEmpty() || txtPass.text.isBlank()) txtPass.setBackgroundResource(R.drawable.bg_edittext_error)
+    }
+
+
+    private fun checkCampos(): Boolean {
+
+        if (txtEmail.text.isEmpty() || txtEmail.text.isBlank()) return true
+        if (txtPass.text.isEmpty() || txtPass.text.isBlank()) return true
+
+        return false
+    }
+
+}

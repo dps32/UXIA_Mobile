@@ -1,38 +1,34 @@
-package com.uxia1.uxia_mobile.ui.dashboard
+package com.uxia1.uxia_mobile.ui.main.dashboard
 
-import android.Manifest
-import android.bluetooth.BluetoothDevice
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Adapter
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
-import androidx.annotation.RequiresPermission
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.uxia1.uxia_mobile.History
+import com.uxia1.uxia_mobile.data.model.History
 import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.databinding.FragmentDashboardBinding
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
 import androidx.fragment.app.activityViewModels
-import com.uxia1.uxia_mobile.ShareViewModel
-import org.json.JSONObject
-import java.io.File
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.uxia1.uxia_mobile.ui.common.ShareViewModel
+import kotlinx.coroutines.launch
 import kotlin.getValue
 
 class DashboardFragment : Fragment() {
 
     private val viewModel: ShareViewModel by activityViewModels()
     lateinit var lv : ListView
-    val dataset = mutableListOf<History>()
     lateinit var adapter : ArrayAdapter<History>
 
     private var _binding: FragmentDashboardBinding? = null
@@ -46,10 +42,15 @@ class DashboardFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel.response.observe(viewLifecycleOwner){ res ->
-            addHistory(res,)
-        }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Solo recolectamos datos cuando el Fragment está en estado STARTED o superior
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.dataset.collect {
+                    adapter.notifyDataSetChanged()
+                }
+            }
+        }
         val dashboardViewModel =
             ViewModelProvider(this).get(DashboardViewModel::class.java)
 
@@ -66,69 +67,12 @@ class DashboardFragment : Fragment() {
         adapter= getListAdapter()
         lv = binding.listView
         lv.setAdapter(adapter)
+        adapter.notifyDataSetChanged()
 
-
-    }
-    fun addHistory(response: String,image : String){
-        val jsonObject = JSONObject(response)
-        if(jsonObject.getString("status")=="OK"){
-            val data = jsonObject.getJSONObject("data")
-            val descriptor = data.getString("description")
-            val tagArray = data.getJSONArray("tags")
-
-
-            val list = mutableListOf<String>()
-            for (i in 0 until tagArray.length()) {
-                list.add(tagArray.getString(i))
-            }
-
-            dataset.add(History(image, list,descriptor))
-            adapter.notifyDataSetChanged()
-
-        }
-
-
-    }
-
-    fun addHistory(history : History){
-
-            val descriptor = history.txtInfo
-            val list = history.tags
-
-            dataset.add(history)
-            adapter.notifyDataSetChanged()
-
-
-
-
-    }
-    fun updateHistory(){
-        var response = "test"
-        //dataset.clear()
-        val jsonObject = JSONObject(response)
-        if(jsonObject.getString("status")=="OK"){
-            val data = jsonObject.getJSONObject("data")
-            val descriptor = data.getString("description")
-            val tagArray = data.getJSONArray("tags")
-
-//            val list = mutableListOf<String>()
-//            for (i in 0 until tagArray.length()) {
-//                list.add(tagArray.getString(i))
-//            }
-
-
-
-
-        }
-
-//        for (elem in serverHistory){
-//            dataset.add(History("","",""))
-//            adapter.notifyDataSetChanged()
-//        }
     }
 
     fun getListAdapter (): ArrayAdapter<History>{
-        adapter = object : ArrayAdapter<History>(requireContext(), R.layout.list_historial, dataset)
+        adapter = object : ArrayAdapter<History>(requireContext(), R.layout.list_historial, viewModel.dataset.value)
         {
             override fun getView(pos: Int, convertView: View?, container: ViewGroup): View {
                 // getView ens construeix el layout i hi "pinta" els valors de l'element en la posició pos

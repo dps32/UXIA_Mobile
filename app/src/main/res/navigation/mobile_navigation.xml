@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.uxia1.uxia_mobile.ui.home.HomeFragment"
+        android:name="com.uxia1.uxia_mobile.ui.main.home.HomeFragment"
         android:label="Ullada"
         tools:layout="@layout/fragment_home">
         <argument
@@ -21,13 +21,13 @@
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.uxia1.uxia_mobile.ui.dashboard.DashboardFragment"
+        android:name="com.uxia1.uxia_mobile.ui.main.dashboard.DashboardFragment"
         android:label="Historial"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.uxia1.uxia_mobile.ui.notifications.NotificationsFragment"
+        android:name="com.uxia1.uxia_mobile.ui.main.notifications.NotificationsFragment"
         android:label="Setting"
         tools:layout="@layout/fragment_notifications" >
 

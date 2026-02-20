@@ -1,4 +1,4 @@
-package com.uxia1.uxia_mobile.ui.home
+package com.uxia1.uxia_mobile.ui.main.home
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

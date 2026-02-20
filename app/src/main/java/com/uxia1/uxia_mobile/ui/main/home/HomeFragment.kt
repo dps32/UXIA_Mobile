@@ -1,5 +1,8 @@
-package com.uxia1.uxia_mobile.ui.home
+package com.uxia1.uxia_mobile.ui.main.home
 
+
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.bluetooth.BluetoothAdapter
 import android.os.Bundle
 import android.util.Log
@@ -13,23 +16,28 @@ import android.widget.TextView
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
-import com.uxia1.uxia_mobile.Device
-import com.uxia1.uxia_mobile.ShareViewModel
-import com.uxia1.uxia_mobile.MainActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.uxia1.uxia_mobile.data.model.Device
+import com.uxia1.uxia_mobile.ui.common.ShareViewModel
+import com.uxia1.uxia_mobile.ui.main.MainActivity
+import com.uxia1.uxia_mobile.core.tts.TTS
 import com.uxia1.uxia_mobile.databinding.FragmentHomeBinding
+import kotlinx.coroutines.launch
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
 
 class HomeFragment : Fragment() {
     lateinit var homeViewModel : HomeViewModel
     lateinit var txtInfo : TextView
-
+    lateinit var redCircle : ImageView
+    private var pulseAnimator: AnimatorSet? = null
     lateinit var fotoView : ImageView
 
     lateinit var btnShowDialog : Button
     private val viewModel: ShareViewModel by activityViewModels()
-    var device : Device? = null
+//    var device : Device? = null
 
     private var _binding: FragmentHomeBinding? = null
 
@@ -42,17 +50,32 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel.device.observe(viewLifecycleOwner){ newDevice ->
-            device=newDevice
-            actualizarDevice(newDevice)
-        }
+//        //detecta si cambia el dispositivo en sharedViewModel
+//        viewModel.device.observe(viewLifecycleOwner){ newDevice ->
+//            device=newDevice
+////            actualizarDevice(newDevice)
+//        }
 
         viewModel.imgFile.observe(viewLifecycleOwner){ file ->
             cambiarImagen(file)
         }
 
-        homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
+
+
+
+
+
+        //detecta si esta hablando el tts
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Escuchamos al objeto Singleton directamente
+                TTS.isSpeaking.collect { talking ->
+                    toggleSpeakingAnimation(talking)
+                    Log.d("TTS","estado: $talking")
+                }
+            }
+        }
+
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -67,18 +90,17 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        redCircle = binding.redCircle
         btnShowDialog = binding.btnShowDialog
         txtInfo = binding.txtInfo
         fotoView = binding.fotoView
         cagarXML()
 
-        if(device==null){
-            btnShowDialog.isEnabled=false
-        }
+
 
         btnShowDialog.setOnClickListener {
             val btAdapter = BluetoothAdapter.getDefaultAdapter()
-            val btdevice = btAdapter.getRemoteDevice(device!!.address)
+            val btdevice = btAdapter.getRemoteDevice(viewModel.device.value.address)
             Log.d("Test","usado ")
 
             (requireContext() as MainActivity).showBLEDialog(btdevice)
@@ -113,26 +135,65 @@ class HomeFragment : Fragment() {
                 }
 
                 if (name != null && address != null) {
-                    device = Device(name, address,"")
-                    actualizarDevice(device!!)
+
+//                    device = Device(name, address,"")
+//                    actualizarDevice(device!!)
+
+                    viewModel.updateDevice(Device(name,address,""))
+                    txtInfo.text = "${name}\n${address}"
+                    btnShowDialog.isEnabled=true
                 }
             }
         } catch (e: Exception) {
+
+            btnShowDialog.isEnabled=false
+            txtInfo.text= "Selecciona un dispositivo bluetooth en Setting"
+
             e.printStackTrace()
         }
     }
 
-    fun actualizarDevice(device: Device){
-
-        txtInfo.text = "${device.nom}\n${device.address}"
-        btnShowDialog.isEnabled=true
-    }
 
     fun cambiarImagen(imgFile : File){
         fotoView.setImageDrawable(null)
         fotoView.setImageURI(imgFile.toUri())
     }
+    private fun toggleSpeakingAnimation(isSpeaking: Boolean) {
 
+        if (isSpeaking) {
+
+            btnShowDialog.text = "talking..."
+            btnShowDialog.isEnabled=false
+
+
+            // Configuramos la animación de pulso
+            val scaleX = ObjectAnimator.ofFloat(redCircle, "scaleX", 1f, 1.3f)
+            val scaleY = ObjectAnimator.ofFloat(redCircle, "scaleY", 1f, 1.3f)
+
+            scaleX.repeatCount = ObjectAnimator.INFINITE
+            scaleX.repeatMode = ObjectAnimator.REVERSE
+            scaleY.repeatCount = ObjectAnimator.INFINITE
+            scaleY.repeatMode = ObjectAnimator.REVERSE
+
+            pulseAnimator = AnimatorSet().apply {
+                playTogether(scaleX, scaleY)
+
+                duration = 300 // Velocidad del pulso
+                start()
+            }
+        } else {
+            // Detenemos la animación y volvemos al tamaño
+            btnShowDialog.text="Connect"
+            btnShowDialog.isEnabled=true
+            pulseAnimator?.cancel()
+            redCircle.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+
+
+
+
+
+        }
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

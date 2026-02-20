@@ -1,4 +1,4 @@
-package com.uxia1.uxia_mobile
+package com.uxia1.uxia_mobile.ui.dialog
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -24,10 +24,9 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.RequiresPermission
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
+import com.uxia1.uxia_mobile.R
+import com.uxia1.uxia_mobile.core.tts.TTS
 import com.uxia1.uxia_mobile.services.HttpClientService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -142,7 +141,8 @@ class BLEconnDialog(
                         // Ejecutamos la parte pesada en Dispatchers.IO
                         val response = withContext(Dispatchers.IO) {
                             base64Image = convertImageFileToBase64(receivedFile)
-                            HttpClientService.sendImage(base64Image)
+                            HttpClientService.Companion.sendImage(base64Image)
+
                         }
 
                         Log.d("HTTP Service", response)

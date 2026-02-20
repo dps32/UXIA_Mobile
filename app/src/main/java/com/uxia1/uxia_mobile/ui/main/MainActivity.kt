@@ -1,25 +1,24 @@
-package com.uxia1.uxia_mobile
+package com.uxia1.uxia_mobile.ui.main
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.uxia1.uxia_mobile.R
+import com.uxia1.uxia_mobile.core.tts.TTS
+import com.uxia1.uxia_mobile.data.model.History
 import com.uxia1.uxia_mobile.databinding.ActivityMainBinding
-import java.io.File
-import androidx.fragment.app.activityViewModels
-
-import com.uxia1.uxia_mobile.ShareViewModel
+import com.uxia1.uxia_mobile.ui.common.ShareViewModel
+import com.uxia1.uxia_mobile.ui.dialog.BLEconnDialog
 import org.json.JSONObject
-import kotlin.getValue
-
+import java.io.File
 
 class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
     private val viewModel: ShareViewModel by viewModels()
@@ -114,7 +113,8 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
                 for (i in 0 until tagArray.length()) {
                     list.add(tagArray.getString(i))
                 }
-                viewModel.updateResponse(History(img, list, descriptor))
+
+                viewModel.addHistory(History(img, list, descriptor))
             }
         }
     }
