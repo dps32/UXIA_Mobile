@@ -27,11 +27,14 @@ import com.uxia1.uxia_mobile.data.model.Device
 import com.uxia1.uxia_mobile.ui.common.ShareViewModel
 import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.databinding.FragmentNotificationsBinding
+import com.uxia1.uxia_mobile.utils.XmlUtils
 
 
 class NotificationsFragment : Fragment() {
 
     lateinit var lv : ListView
+    lateinit var btnToken : Button
+
 
     private val viewModel: ShareViewModel by activityViewModels()
     val dataset = mutableListOf<BluetoothDevice>()
@@ -83,11 +86,18 @@ class NotificationsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         adapter = getListAdapter()
 
+
+        btnToken = binding.btnToken
+        btnToken.setOnClickListener {
+            XmlUtils.eliminarXML("user",requireContext())
+        }
         recargar = binding.btnRecargar
         recargar.setOnClickListener {
             updatePairedDevices()
             adapter.notifyDataSetChanged()
-            eliminarXML()
+
+            XmlUtils.eliminarXML("setting",requireContext())
+
             Toast.makeText(requireContext(),"Recargado", Toast.LENGTH_SHORT).show()
         }
 
@@ -186,36 +196,9 @@ class NotificationsFragment : Fragment() {
         }
     }
 
-    fun generarXML(){
-
-        val xml = """
-        
-        <device>
-            <name>${device.nom}</name>
-            <address>${device.address}</address>
-        </device>
-        """.trimIndent()
-
-        requireContext().openFileOutput("setting.xml", Context.MODE_PRIVATE).use {
-            it.write(xml.toByteArray())
-        }
-    }
-
-    fun eliminarXML() {
-
-        val filename = "setting.xml"
-        val isDeleted = requireContext().deleteFile(filename)
-
-        if (isDeleted) {
-            Log.d("FILE_IO", "El archivo $filename fue eliminado con éxito.")
-        } else {
-            Log.d("FILE_IO", "No se pudo eliminar el archivo o no existe.")
-        }
-    }
-
     fun guardarData(){
         actualizarDevice(device)
-        generarXML()
+        XmlUtils.generarDeviceXML(device,requireContext())
     }
 
 

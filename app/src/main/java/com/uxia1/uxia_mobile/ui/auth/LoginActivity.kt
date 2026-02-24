@@ -1,9 +1,12 @@
 package com.uxia1.uxia_mobile.ui.auth
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.wifi.rtt.PasnConfig
 import android.os.Bundle
+import android.util.Log
+import android.util.Xml
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -12,9 +15,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.uxia1.uxia_mobile.R
+import com.uxia1.uxia_mobile.core.tts.TTS
 import com.uxia1.uxia_mobile.data.model.User
 import com.uxia1.uxia_mobile.services.HttpClientService
 import com.uxia1.uxia_mobile.ui.main.MainActivity
+import com.uxia1.uxia_mobile.ui.main.MainData
+import com.uxia1.uxia_mobile.utils.XmlUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
@@ -33,6 +43,12 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
+        XmlUtils.cagarToken(this)
+        if(MainData.Companion.isToken()){
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+
         txtRegister = findViewById(R.id.tvRegister)
 
         txtEmail = findViewById(R.id.txtLoginEmail)
@@ -43,22 +59,31 @@ class LoginActivity : AppCompatActivity() {
         btnLogin = findViewById(R.id.btnLogin)
 
         btnLogin.setOnClickListener{
+            uItextWarning()
+
             if(checkCampos()){
-                UItextWarning()
                 return@setOnClickListener
             }
 
             val email = txtEmail.text.toString()
             val pass = txtPass.text.toString()
             val user = User(email,pass)
-
-//            val response = HttpClientService.Companion.login(user)
-//            handleResponse(response)
-            val response = "OK"
-            if(response == "OK"){
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = HttpClientService.Companion.login(user)
+                    withContext(Dispatchers.Main) {
+                        handleResponse(response)
+                    }
+                } catch (e: Exception) {
+                    Log.e("HTTP Error", "Error al enviar: ${e.message}")
+                }
             }
+
+//            val response = "OK"
+//            if(response == "OK"){
+//                val intent = Intent(this, MainActivity::class.java)
+//                startActivity(intent)
+//            }
 
         }
 
@@ -68,22 +93,46 @@ class LoginActivity : AppCompatActivity() {
         }
 
 
+
+
     }
     private fun handleResponse(response : String) {
 //        {"status": "OK", "message": "Usuari autenticat correctament", "data": {"token": "D23qswfSgR6VM9cuTuN"}}
         val jsonObject = JSONObject(response)
+
         if (jsonObject.getString("status") == "OK") {
             val data = jsonObject.getJSONObject("data")
+
             val token = data.getString("token")
+
+            XmlUtils.guardarToken(token,this)
+            MainData.Companion.setToken(token)
+
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+
+
+
+
+
         }else{
             txtInfo.setTextColor(Color.RED)
             txtInfo.text = "Datos incorrectos o usuario no existe"
         }
     }
 
-    private fun UItextWarning() {
-        if (txtEmail.text.isEmpty() || txtEmail.text.isBlank()) txtEmail.setBackgroundResource(R.drawable.bg_edittext_error)
-        if (txtPass.text.isEmpty() || txtPass.text.isBlank()) txtPass.setBackgroundResource(R.drawable.bg_edittext_error)
+
+    private fun uItextWarning() {
+        if (txtEmail.text.isEmpty() || txtEmail.text.isBlank()) {
+            txtEmail.setBackgroundResource(R.drawable.bg_edittext_error)
+        }else {
+            txtEmail.setBackgroundResource(R.drawable.bg_edittext_normal)
+        }
+        if (txtPass.text.isEmpty() || txtPass.text.isBlank()) {
+            txtPass.setBackgroundResource(R.drawable.bg_edittext_error)
+        }else{
+            txtPass.setBackgroundResource(R.drawable.bg_edittext_normal)
+        }
     }
 
 

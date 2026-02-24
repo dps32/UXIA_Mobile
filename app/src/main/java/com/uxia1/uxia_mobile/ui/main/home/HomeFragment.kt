@@ -162,7 +162,7 @@ class HomeFragment : Fragment() {
 
         if (isSpeaking) {
 
-            btnShowDialog.text = "talking..."
+            btnShowDialog.text = "parlant"
             btnShowDialog.isEnabled=false
 
 

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.Window
 import android.widget.Button
 import android.widget.EditText
@@ -13,6 +14,10 @@ import android.widget.TextView
 import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.data.model.User
 import com.uxia1.uxia_mobile.services.HttpClientService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class SMSconnDialog (context: Context,
@@ -21,7 +26,7 @@ class SMSconnDialog (context: Context,
 ) : Dialog(context) {
 
     interface SMSconnectionCallback {
-        fun onConnectClicked(address: String)
+        fun onConnect(token: String)
     }
 
     lateinit var txtInfo : TextView
@@ -45,16 +50,24 @@ class SMSconnDialog (context: Context,
         btnCheck.setOnClickListener {
             if(pin.text.isEmpty()||pin.text.isBlank()) return@setOnClickListener
 
-//            val response = HttpClientService.Companion.checkPin(pin.text.toString(),user)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    Log.d("REVISAR","${user.telefon},${pin.text}")
+                    val response = HttpClientService.Companion.validar(user.telefon,pin.text.toString())
 
-            val response = "OK"
-
-            if(response=="OK"){
-                connectionCallback.onConnectClicked("")
-                dismiss()
-            }else{
-                txtStatus.text = "Pin invalido"
+                    withContext(Dispatchers.Main) {
+                        Log.d("REVISAR","msg: $response")
+                        handleResponse(response)
+                    }
+                } catch (e: Exception) {
+                    Log.e("HTTP Error", "Error al enviar: ${e.message}")
+                }
             }
+
+
+
+
+
 
         }
 
@@ -64,25 +77,22 @@ class SMSconnDialog (context: Context,
         }
 
 
-//        btnConnect.setOnClickListener {
-//            val address = etAddress.text.toString()
-//            if (address.isNotEmpty()) {
-//                connectionCallback.onConnectClicked(address)
-//                dismiss() // Cerrar el diálogo
-//            } else {
-//                etAddress.error = "Introduce una dirección"
-//            }
-//        }
+
     }
     private fun handleResponse(response : String) {
-//        {"status": "OK", "message": "Usuari autenticat correctament", "data": {"token": "D23qswfSgR6VM9cuTuN"}}
-        val jsonObject = JSONObject(response)
-        if (jsonObject.getString("status") == "OK") {
-            val data = jsonObject.getJSONObject("data")
-            val token = data.getString("token")
-        }else{
-            txtInfo.setTextColor(Color.RED)
-            txtInfo.text = "Datos incorrectos o usuario no existe"
+        try{
+            val jsonObject = JSONObject(response)
+            if (jsonObject.getString("status") == "OK") {
+                val data = jsonObject.getJSONObject("data")
+                val token = data.getString("api_key")
+
+                connectionCallback.onConnect(token)
+                dismiss()
+            }
+        }catch(e:Exception){
+            txtStatus.setTextColor(Color.RED)
+            txtStatus.text = "Pin invalido"
+            txtInfo.text = "Intente nuevamente"
         }
     }
 }
