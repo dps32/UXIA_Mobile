@@ -27,6 +27,7 @@ import com.uxia1.uxia_mobile.data.model.Device
 import com.uxia1.uxia_mobile.ui.common.ShareViewModel
 import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.databinding.FragmentNotificationsBinding
+import com.uxia1.uxia_mobile.ui.main.MainData
 import com.uxia1.uxia_mobile.utils.XmlUtils
 
 
@@ -90,6 +91,7 @@ class NotificationsFragment : Fragment() {
         btnToken = binding.btnToken
         btnToken.setOnClickListener {
             XmlUtils.eliminarXML("user",requireContext())
+            MainData.Companion.setToken("asdasd")
         }
         recargar = binding.btnRecargar
         recargar.setOnClickListener {

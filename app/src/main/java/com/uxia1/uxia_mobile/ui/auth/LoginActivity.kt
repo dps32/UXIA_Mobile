@@ -10,6 +10,7 @@ import android.util.Xml
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -59,6 +60,28 @@ class LoginActivity : AppCompatActivity() {
         btnLogin = findViewById(R.id.btnLogin)
 
         btnLogin.setOnClickListener{
+//            CoroutineScope(Dispatchers.IO).launch {
+//                try {
+//                    MainData.Companion.setToken("adajdnkansdn1dnjnaskndajsdnasdandj")
+//                    val response = HttpClientService.Companion.sendImage("")
+//                    Log.d("TEST_TOKEN","msg: $response")
+//                    val msg = response.substringBefore(": ")
+//                    Log.d("REGISTER_handleJson",msg)
+//                    if(msg=="Error 401"){
+//                        Log.d("TEST_TOKEN","Al login pa")
+//                        withContext(Dispatchers.Main){
+//                            Toast.makeText(this@LoginActivity,"Login expirado", Toast.LENGTH_SHORT).show()
+//
+//                            val intent = Intent(this@LoginActivity, RegisterActivity::class.java)
+//                            startActivity(intent)
+//                        }
+//
+//                    }
+//                } catch (e: Exception) {
+//                    Log.e("HTTP Error", "Error al enviar: ${e.message}")
+//                }
+//            }
+
             uItextWarning()
 
             if(checkCampos()){
@@ -78,13 +101,6 @@ class LoginActivity : AppCompatActivity() {
                     Log.e("HTTP Error", "Error al enviar: ${e.message}")
                 }
             }
-
-//            val response = "OK"
-//            if(response == "OK"){
-//                val intent = Intent(this, MainActivity::class.java)
-//                startActivity(intent)
-//            }
-
         }
 
         txtRegister.setOnClickListener {

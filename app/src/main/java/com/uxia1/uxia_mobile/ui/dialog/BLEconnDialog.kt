@@ -136,10 +136,11 @@ class BLEconnDialog(
                 btnConnect.isEnabled = false
 
                 CoroutineScope(Dispatchers.Main).launch {
+                    var response = ""
                     try {
                         var base64Image =""
                         // Ejecutamos la parte pesada en Dispatchers.IO
-                        val response = withContext(Dispatchers.IO) {
+                        response = withContext(Dispatchers.IO) {
                             base64Image = convertImageFileToBase64(receivedFile)
                             HttpClientService.Companion.sendImage(base64Image)
 
@@ -156,6 +157,7 @@ class BLEconnDialog(
 
                     } catch (e: Exception) {
                         Log.e("HTTP Error", "Error al enviar: ${e.message}")
+                        connectionCallback.onReceivedResponse("",response)
                         tvStatus.text = "Error en l'enviament"
                         btnConnect.isEnabled = true
                     }

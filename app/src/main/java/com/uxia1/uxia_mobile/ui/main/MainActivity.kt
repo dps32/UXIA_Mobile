@@ -2,7 +2,9 @@ package com.uxia1.uxia_mobile.ui.main
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,8 +17,10 @@ import com.uxia1.uxia_mobile.R
 import com.uxia1.uxia_mobile.core.tts.TTS
 import com.uxia1.uxia_mobile.data.model.History
 import com.uxia1.uxia_mobile.databinding.ActivityMainBinding
+import com.uxia1.uxia_mobile.ui.auth.RegisterActivity
 import com.uxia1.uxia_mobile.ui.common.ShareViewModel
 import com.uxia1.uxia_mobile.ui.dialog.BLEconnDialog
+import com.uxia1.uxia_mobile.utils.XmlUtils
 import org.json.JSONObject
 import java.io.File
 
@@ -103,19 +107,36 @@ class MainActivity : AppCompatActivity(), BLEconnDialog.BLEConnectionCallback {
 
     override fun onReceivedResponse(img: String, response : String) {
         runOnUiThread {
-            val jsonObject = JSONObject(response)
-            if (jsonObject.getString("status") == "OK") {
-                val data = jsonObject.getJSONObject("data")
-                val descriptor = data.getString("description")
-                val tagArray = data.getJSONArray("tags")
+            try{
+                Log.d("TEST_IMG","msg: $response")
+                val jsonObject = JSONObject(response)
+                Log.d("TEST_IMG_POST","msg: $response")
+                if (jsonObject.getString("status") == "OK") {
+                    val data = jsonObject.getJSONObject("data")
+                    val descriptor = data.getString("description")
+                    val tagArray = data.getJSONArray("tags")
 
-                val list = mutableListOf<String>()
-                for (i in 0 until tagArray.length()) {
-                    list.add(tagArray.getString(i))
+                    val list = mutableListOf<String>()
+                    for (i in 0 until tagArray.length()) {
+                        list.add(tagArray.getString(i))
+                    }
+
+                    viewModel.addHistory(History(img, list, descriptor))
                 }
 
-                viewModel.addHistory(History(img, list, descriptor))
+            }catch (e: Exception){
+                Log.d("TEST_IMG_POST","msg: $response")
+                val msg = response.substringBefore(": ")
+                Log.d("REGISTER_handleJson",msg)
+                if(msg=="Error 401"){
+                    Toast.makeText(this@MainActivity,"Sesion expirada", Toast.LENGTH_SHORT).show()
+                    XmlUtils.eliminarXML("user",this@MainActivity)
+                    MainData.Companion.setToken("")
+                    val intent = Intent(this@MainActivity, RegisterActivity::class.java)
+                    startActivity(intent)
+                }
             }
+
         }
     }
 
